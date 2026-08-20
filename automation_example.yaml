@@ -1,0 +1,37 @@
+alias: Kouluruoka - Päivitä kalenteri
+description: Lisää viikon lounaat Local Calendariin
+mode: single
+triggers:
+  - trigger: time
+    at: "06:30:00"
+  - trigger: homeassistant
+    event: start
+conditions: []
+actions:
+  - variables:
+      days: "{{ state_attr('sensor.kouluruoka_raaka', 'Days') or [] }}"
+  - repeat:
+      for_each: "{{ days }}"
+      sequence:
+        - variables:
+            day_str: "{{ repeat.item.Date }}"
+            lounas: >-
+              {% set ns = namespace(name='') %}
+              {% for meal in repeat.item.Meals if meal.MealType == 'Lounas' %}
+                {% set ns.name = meal.Name %}
+              {% endfor %}
+              {{ ns.name }}
+            event_date: >-
+              {% set parts = day_str.split(' ') %}
+              {% set dmy = parts[1].split('.') %}
+              {{ '%04d-%02d-%02d' | format(now().year, dmy[1] | int, dmy[0] | int) }}
+        - condition: template
+          value_template: "{{ lounas | length > 0 }}"
+        - action: calendar.create_event
+          target:
+            entity_id: calendar.kouluruoka
+          data:
+            summary: "{{ (lounas.split(','))[0] | trim }}"
+            description: "{{ lounas | trim }}"
+            start_date: "{{ event_date | trim }}"
+            end_date: "{{ (event_date | trim | as_datetime + timedelta(days=1)).date() }}"
