@@ -1,0 +1,72 @@
+# ============================================================
+# Kouluruoka - Haagan yläkoulu (Vanha Viertotie)
+# Vain Lounas (ei kasvis)
+# ============================================================
+
+rest:
+  - resource: "https://kouluruoka.fi/page-data/menu/helsinki_haaganylakouluvanhaviertotie/page-data.json"
+    scan_interval: 21600   # 6 tuntia
+    timeout: 30
+    sensor:
+      - name: "Kouluruoka Raaka"
+        unique_id: kouluruoka_raaka
+        value_template: "{{ value_json.result.pageContext.menu.RestaurantName }}"
+        json_attributes_path: "$.result.pageContext.menu"
+        json_attributes:
+          - Days
+          - Start
+          - RestaurantName
+
+template:
+  - sensor:
+      - name: "Kouluruoka Tänään"
+        unique_id: kouluruoka_tanaan
+        state: >-
+          {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+          {% set today = now().day ~ '.' ~ now().month ~ '.' %}
+          {% set found = namespace(name='Ei tietoa') %}
+          {% for day in days %}
+            {% if today in day.Date %}
+              {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+                {% set found.name = meal.Name.split(',')[0] | trim %}
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+          {{ found.name }}
+        attributes:
+          full: >-
+            {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+            {% set today = now().day ~ '.' ~ now().month ~ '.' %}
+            {% for day in days %}
+              {% if today in day.Date %}
+                {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+                  {{ meal.Name }}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
+
+      - name: "Kouluruoka Huomenna"
+        unique_id: kouluruoka_huomenna
+        state: >-
+          {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+          {% set tomorrow = (now() + timedelta(days=1)).day ~ '.' ~ (now() + timedelta(days=1)).month ~ '.' %}
+          {% set found = namespace(name='Ei tietoa') %}
+          {% for day in days %}
+            {% if tomorrow in day.Date %}
+              {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+                {% set found.name = meal.Name.split(',')[0] | trim %}
+              {% endfor %}
+            {% endif %}
+          {% endfor %}
+          {{ found.name }}
+        attributes:
+          full: >-
+            {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+            {% set tomorrow = (now() + timedelta(days=1)).day ~ '.' ~ (now() + timedelta(days=1)).month ~ '.' %}
+            {% for day in days %}
+              {% if tomorrow in day.Date %}
+                {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+                  {{ meal.Name }}
+                {% endfor %}
+              {% endif %}
+            {% endfor %}
