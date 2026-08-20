@@ -15,7 +15,7 @@ Hakee **Haagan yläkoulu (Vanha Viertotie)** -ruokalistan [kouluruoka.fi](https:
 
 ### 2. Package
 1. Luo kansio `config/packages/` (jos ei ole)
-2. Kopioi `packages/kouluruoka.yaml` sinne
+2. Kopioi `kouluruoka.yaml` sinne
 3. Varmista `configuration.yaml`:
 
 ```yaml
