@@ -1,4 +1,4 @@
-# Home Assistant – Kouluruoka (Haagan yläkoulu)
+# Home Assistant – Kouluruoka 
 
 Hakee näillä konfifuraatiolla Haagan yläkoulun (Vanha Viertotie)** -ruokalistan [kouluruoka.fi](https://kouluruoka.fi/)-palvelusta ja tuo sen Home Assistantiin.
 Paketti on tehty Haagan yläkoululle, mutta sama tapa toimii **millä tahansa** kouluruoka.fi:ssä olevalla koululla.
