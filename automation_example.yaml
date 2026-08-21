@@ -1,5 +1,5 @@
 alias: Kouluruoka - Päivitä kalenteri
-description: Lisää viikon lounaat Local Calendariin
+description: Lisää viikon lounaat ja kasvislounaat Local Calendariin
 mode: single
 triggers:
   - trigger: time
@@ -21,17 +21,39 @@ actions:
                 {% set ns.name = meal.Name %}
               {% endfor %}
               {{ ns.name }}
+            kasvis: >-
+              {% set ns = namespace(name='') %}
+              {% for meal in repeat.item.Meals if meal.MealType == 'Kasvislounas' %}
+                {% set ns.name = meal.Name %}
+              {% endfor %}
+              {{ ns.name }}
             event_date: >-
               {% set parts = day_str.split(' ') %}
               {% set dmy = parts[1].split('.') %}
               {{ '%04d-%02d-%02d' | format(now().year, dmy[1] | int, dmy[0] | int) }}
         - condition: template
-          value_template: "{{ lounas | length > 0 }}"
-        - action: calendar.create_event
-          target:
-            entity_id: calendar.kouluruoka
-          data:
-            summary: "{{ (lounas.split(','))[0] | trim }}"
-            description: "{{ lounas | trim }}"
-            start_date: "{{ event_date | trim }}"
-            end_date: "{{ (event_date | trim | as_datetime + timedelta(days=1)).date() }}"
+          value_template: "{{ lounas | length > 0 or kasvis | length > 0 }}"
+        - if:
+            - condition: template
+              value_template: "{{ lounas | length > 0 }}"
+          then:
+            - action: calendar.create_event
+              target:
+                entity_id: calendar.kouluruoka
+              data:
+                summary: "🍽️ {{ (lounas.split(','))[0] | trim }}"
+                description: "{{ lounas | trim }}"
+                start_date: "{{ event_date | trim }}"
+                end_date: "{{ (event_date | trim | as_datetime + timedelta(days=1)).date() }}"
+        - if:
+            - condition: template
+              value_template: "{{ kasvis | length > 0 }}"
+          then:
+            - action: calendar.create_event
+              target:
+                entity_id: calendar.kouluruoka
+              data:
+                summary: "🥗 {{ (kasvis.split(','))[0] | trim }}"
+                description: "{{ kasvis | trim }}"
+                start_date: "{{ event_date | trim }}"
+                end_date: "{{ (event_date | trim | as_datetime + timedelta(days=1)).date() }}"
