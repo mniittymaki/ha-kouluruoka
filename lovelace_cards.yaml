@@ -1,0 +1,104 @@
+# Lovelace – Kouluruoka täysi paketti
+
+- type: vertical-stack
+  cards:
+    - type: custom:mushroom-title-card
+      title: Kouluruoka
+      subtitle: Haagan yläkoulu
+    - type: custom:mushroom-template-card
+      primary: "Lounas tänään"
+      secondary: "{{ states('sensor.kouluruoka_tanaan') }}"
+      icon: mdi:food
+      icon_color: green
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Kasvis tänään"
+      secondary: "{{ states('sensor.kouluruoka_tanaan_kasvis') }}"
+      icon: mdi:leaf
+      icon_color: teal
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Lounas huomenna"
+      secondary: "{{ states('sensor.kouluruoka_huomenna') }}"
+      icon: mdi:food-outline
+      icon_color: blue
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Kasvis huomenna"
+      secondary: "{{ states('sensor.kouluruoka_huomenna_kasvis') }}"
+      icon: mdi:leaf
+      icon_color: cyan
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "E-koodit tänään"
+      secondary: >-
+        {{ states('sensor.kouluruoka_tanaan_e_koodit') }} kpl
+        {% set codes = state_attr('sensor.kouluruoka_tanaan_e_koodit', 'codes') or [] %}
+        {% if codes %} — {{ codes | join(', ') }}{% endif %}
+      icon: mdi:flask
+      icon_color: >-
+        {% set n = states('sensor.kouluruoka_tanaan_e_koodit') | int(0) %}
+        {{ 'green' if n == 0 else ('orange' if n < 5 else 'red') }}
+      multiline_secondary: true
+
+- type: entities
+  title: Kouluruoka
+  show_header_toggle: false
+  entities:
+    - entity: sensor.kouluruoka_tanaan
+      name: Lounas tänään
+      icon: mdi:food
+    - entity: sensor.kouluruoka_tanaan_kasvis
+      name: Kasvis tänään
+      icon: mdi:leaf
+    - entity: sensor.kouluruoka_huomenna
+      name: Lounas huomenna
+      icon: mdi:food-outline
+    - entity: sensor.kouluruoka_huomenna_kasvis
+      name: Kasvis huomenna
+      icon: mdi:leaf
+    - entity: sensor.kouluruoka_tanaan_e_koodit
+      name: E-koodit (yhteensä)
+      icon: mdi:flask
+    - entity: sensor.kouluruoka_tanaan_e_koodit_lounas
+      name: E-koodit lounas
+      icon: mdi:flask-outline
+    - entity: sensor.kouluruoka_tanaan_e_koodit_kasvis
+      name: E-koodit kasvis
+      icon: mdi:flask-empty
+
+- type: markdown
+  title: Raaka-aineet – lounas
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan') }}**
+
+    {{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_lounas') or 'Ei tietoja' }}
+
+- type: markdown
+  title: Raaka-aineet – kasvis
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan_kasvis') }}**
+
+    {{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_kasvis') or 'Ei tietoja' }}
+
+- type: markdown
+  title: E-koodit – mitä nämä ovat?
+  content: |
+    {% set details = state_attr('sensor.kouluruoka_tanaan_e_koodit', 'details') or [] %}
+    {% if details | length == 0 %}
+    Ei E-koodeja tänään, tai skripti ei ole vielä ajanut.
+    {% else %}
+    {% for d in details %}
+    ### {{ d.code }} — {{ d.name }}
+    {% if d.type %}*{{ d.type }}*  
+    {% endif %}{{ d.info or '_Ei lisätietoa katalogissa._' }}
+
+    {% endfor %}
+    {% endif %}
+    ---
+    [Ruokavirasto – E-koodit (suomeksi)](https://www.ruokavirasto.fi/elintarvikkeet/ohjeita-kuluttajille/e-kooditlisaaineet/e-koodit/)
+
+- type: calendar
+  entities:
+    - calendar.kouluruoka
+  initial_view: listWeek
