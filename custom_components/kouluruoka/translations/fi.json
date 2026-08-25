@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kouluruoka",
+        "description": "Anna kouluruoka.fi-sivun slug. Oletus on Haagan yläkoulu.",
+        "data": {
+          "slug": "Koulun slug tai menu-URL",
+          "name": "Nimi Home Assistantissa (valinnainen)",
+          "scan_interval": "Päivitysväli (s)"
+        }
+      }
+    },
+    "error": {
+      "invalid_slug": "Koulua ei löytynyt tällä slugilla",
+      "cannot_connect": "kouluruoka.fi:hin ei saatu yhteyttä"
+    },
+    "abort": {
+      "already_configured": "Tämä koulu on jo lisätty"
+    }
+  }
+}

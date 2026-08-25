@@ -1,0 +1,245 @@
+# Lovelace – Kouluruoka täysi paketti
+
+- type: vertical-stack
+  cards:
+    - type: custom:mushroom-title-card
+      title: Kouluruoka
+      subtitle: Haagan yläkoulu
+    - type: custom:mushroom-template-card
+      primary: "Lounas tänään"
+      secondary: "{{ states('sensor.kouluruoka_tanaan') }}"
+      icon: mdi:food
+      icon_color: green
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Kasvis tänään"
+      secondary: "{{ states('sensor.kouluruoka_tanaan_kasvis') }}"
+      icon: mdi:leaf
+      icon_color: teal
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Lounas huomenna"
+      secondary: "{{ states('sensor.kouluruoka_huomenna') }}"
+      icon: mdi:food-outline
+      icon_color: blue
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Kasvis huomenna"
+      secondary: "{{ states('sensor.kouluruoka_huomenna_kasvis') }}"
+      icon: mdi:leaf
+      icon_color: cyan
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Ravinto lounas"
+      secondary: >-
+        {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'yhteenveto')
+           or (states('sensor.kouluruoka_tanaan_ravinto_lounas') ~ ' kcal') }}
+      icon: mdi:fire
+      icon_color: amber
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Ravinto kasvis"
+      secondary: >-
+        {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'yhteenveto')
+           or (states('sensor.kouluruoka_tanaan_ravinto_kasvis') ~ ' kcal') }}
+      icon: mdi:fire
+      icon_color: orange
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Huomiot lounas"
+      secondary: >-
+        {{ states('sensor.kouluruoka_huomio_lounas') }}
+        — {{ state_attr('sensor.kouluruoka_huomio_lounas', 'yhteenveto') or '' }}
+      icon: mdi:alert-circle-outline
+      icon_color: >-
+        {% set t = states('sensor.kouluruoka_huomio_lounas') %}
+        {{ 'red' if t == 'varoitus' else ('orange' if t == 'huomio' else ('blue' if t == 'epailyttava' else 'green')) }}
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "Huomiot kasvis"
+      secondary: >-
+        {{ states('sensor.kouluruoka_huomio_kasvis') }}
+        — {{ state_attr('sensor.kouluruoka_huomio_kasvis', 'yhteenveto') or '' }}
+      icon: mdi:alert-outline
+      icon_color: >-
+        {% set t = states('sensor.kouluruoka_huomio_kasvis') %}
+        {{ 'red' if t == 'varoitus' else ('orange' if t == 'huomio' else ('blue' if t == 'epailyttava' else 'green')) }}
+      multiline_secondary: true
+    - type: custom:mushroom-template-card
+      primary: "E-koodit tänään"
+      secondary: >-
+        {{ states('sensor.kouluruoka_tanaan_e_koodit') }} kpl
+        {% set codes = state_attr('sensor.kouluruoka_tanaan_e_koodit', 'codes') or [] %}
+        {% if codes %} — {{ codes | join(', ') }}{% endif %}
+      icon: mdi:flask
+      icon_color: >-
+        {% set n = states('sensor.kouluruoka_tanaan_e_koodit') | int(0) %}
+        {{ 'green' if n == 0 else ('orange' if n < 5 else 'red') }}
+      multiline_secondary: true
+
+- type: entities
+  title: Kouluruoka
+  show_header_toggle: false
+  entities:
+    - entity: sensor.kouluruoka_tanaan
+      name: Lounas tänään
+      icon: mdi:food
+    - entity: sensor.kouluruoka_tanaan_kasvis
+      name: Kasvis tänään
+      icon: mdi:leaf
+    - entity: sensor.kouluruoka_huomenna
+      name: Lounas huomenna
+      icon: mdi:food-outline
+    - entity: sensor.kouluruoka_huomenna_kasvis
+      name: Kasvis huomenna
+      icon: mdi:leaf
+    - entity: sensor.kouluruoka_tanaan_e_koodit
+      name: E-koodit (yhteensä)
+      icon: mdi:flask
+    - entity: sensor.kouluruoka_tanaan_e_koodit_lounas
+      name: E-koodit lounas
+      icon: mdi:flask-outline
+    - entity: sensor.kouluruoka_tanaan_e_koodit_kasvis
+      name: E-koodit kasvis
+      icon: mdi:flask-empty
+    - entity: sensor.kouluruoka_e_koodit_historia
+      name: E-koodit historiassa
+      icon: mdi:chart-bar
+    - entity: sensor.kouluruoka_e_koodit_yleisin
+      name: Yleisin E-koodi
+      icon: mdi:trophy
+    - entity: sensor.kouluruoka_tanaan_ravinto_lounas
+      name: Ravinto lounas
+      icon: mdi:fire
+    - entity: sensor.kouluruoka_tanaan_ravinto_kasvis
+      name: Ravinto kasvis
+      icon: mdi:leaf-circle
+    - entity: sensor.kouluruoka_huomio_lounas
+      name: Huomiot lounas
+      icon: mdi:alert-circle-outline
+    - entity: sensor.kouluruoka_huomio_kasvis
+      name: Huomiot kasvis
+      icon: mdi:alert-outline
+
+- type: markdown
+  title: Huomiot – lounas
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan') }}** — {{ states('sensor.kouluruoka_huomio_lounas') }}
+
+    {{ state_attr('sensor.kouluruoka_huomio_lounas', 'yhteenveto') or 'Ei tietoja' }}
+
+    {% set flags = state_attr('sensor.kouluruoka_huomio_lounas', 'liput') or [] %}
+    {% for f in flags %}
+    - **{{ f.taso }}**: {{ f.otsikko }} — {{ f.kohde }}
+    {% endfor %}
+
+- type: markdown
+  title: Huomiot – kasvis
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan_kasvis') }}** — {{ states('sensor.kouluruoka_huomio_kasvis') }}
+
+    {{ state_attr('sensor.kouluruoka_huomio_kasvis', 'yhteenveto') or 'Ei tietoja' }}
+
+    {% set flags = state_attr('sensor.kouluruoka_huomio_kasvis', 'liput') or [] %}
+    {% for f in flags %}
+    - **{{ f.taso }}**: {{ f.otsikko }} — {{ f.kohde }}
+    {% endfor %}
+
+- type: markdown
+  title: Ravintoarvot – lounas
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan') }}**
+
+    {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'yhteenveto') or 'Ei tietoja' }}
+
+    | | |
+    |---|---|
+    | Energia | {{ states('sensor.kouluruoka_tanaan_ravinto_lounas') }} kcal ({{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'kj') }} kJ) |
+    | Proteiini | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'proteiini') }} g |
+    | Hiilihydraatit | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'hiilihydraatit') }} g |
+    | josta sokereita | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'sokerit') }} g |
+    | Rasva | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'rasva') }} g |
+    | josta tyydyttynyttä | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'tyydyttynyt') }} g |
+    | Suola | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'suola') }} g |
+    | Annosarvio | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'osuus_g') }} g |
+
+    {% set comps = state_attr('sensor.kouluruoka_tanaan_ravinto_lounas', 'komponentit') or [] %}
+    {% for c in comps %}
+    - {{ c.name }} ({{ c.osuus_g }} g): {{ c.kcal }} kcal
+    {% endfor %}
+
+- type: markdown
+  title: Ravintoarvot – kasvis
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan_kasvis') }}**
+
+    {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'yhteenveto') or 'Ei tietoja' }}
+
+    | | |
+    |---|---|
+    | Energia | {{ states('sensor.kouluruoka_tanaan_ravinto_kasvis') }} kcal ({{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'kj') }} kJ) |
+    | Proteiini | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'proteiini') }} g |
+    | Hiilihydraatit | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'hiilihydraatit') }} g |
+    | josta sokereita | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'sokerit') }} g |
+    | Rasva | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'rasva') }} g |
+    | josta tyydyttynyttä | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'tyydyttynyt') }} g |
+    | Suola | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'suola') }} g |
+    | Annosarvio | {{ state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'osuus_g') }} g |
+
+    {% set comps = state_attr('sensor.kouluruoka_tanaan_ravinto_kasvis', 'komponentit') or [] %}
+    {% for c in comps %}
+    - {{ c.name }} ({{ c.osuus_g }} g): {{ c.kcal }} kcal
+    {% endfor %}
+
+- type: markdown
+  title: Raaka-aineet – lounas
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan') }}**
+
+    {{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_lounas') or 'Ei tietoja' }}
+
+- type: markdown
+  title: Raaka-aineet – kasvis
+  content: |
+    **{{ states('sensor.kouluruoka_tanaan_kasvis') }}**
+
+    {{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_kasvis') or 'Ei tietoja' }}
+
+- type: markdown
+  title: E-koodit – mitä nämä ovat?
+  content: |
+    {% set details = state_attr('sensor.kouluruoka_tanaan_e_koodit', 'details') or [] %}
+    {% if details | length == 0 %}
+    Ei E-koodeja tänään, tai skripti ei ole vielä ajanut.
+    {% else %}
+    {% for d in details %}
+    ### {{ d.code }} — {{ d.name }}
+    {% if d.type %}*{{ d.type }}*  
+    {% endif %}{{ d.info or '_Ei lisätietoa katalogissa._' }}
+
+    {% endfor %}
+    {% endif %}
+    ---
+    [Ruokavirasto – E-koodit (suomeksi)](https://www.ruokavirasto.fi/elintarvikkeet/ohjeita-kuluttajille/e-kooditlisaaineet/e-koodit/)
+
+- type: markdown
+  title: E-koodit – yleisimmät
+  content: |
+    Seuranta: **{{ state_attr('sensor.kouluruoka_e_koodit_historia', 'paivia') or 0 }}** päivää,
+    **{{ states('sensor.kouluruoka_e_koodit_historia') }}** eri koodia.
+
+    {% set top = state_attr('sensor.kouluruoka_e_koodit_historia', 'top') or [] %}
+    {% if top | length == 0 %}
+    Historia kertyy automaattisesti, kun skripti ajaa (tämän viikon lista tallentuu heti).
+    {% else %}
+    | E-koodi | Nimi | Päiviä | Lounas | Kasvis | Viimeksi |
+    |---|---|---:|---:|---:|---|
+    {% for d in top %}
+    | {{ d.code }} | {{ d.name }} | {{ d.paivia }} | {{ d.lounas }} | {{ d.kasvis }} | {{ d.viimeksi }} |
+    {% endfor %}
+    {% endif %}
+
+- type: calendar
+  entities:
+    - calendar.kouluruoka
+  initial_view: listWeek

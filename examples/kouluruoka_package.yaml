@@ -1,0 +1,254 @@
+# ============================================================
+# Kouluruoka - Haagan yläkoulu (Vanha Viertotie)
+# Lounas + Kasvislounas + raaka-aineet + E-koodit + ravintoarviot
+# ============================================================
+# Kopioi → config/packages/kouluruoka.yaml
+#
+# Lisäksi:
+#   e_koodit.json → config/www/e_koodit.json
+#   python_scripts/kouluruoka_e.py → config/python_scripts/kouluruoka_e.py
+#   historia syntyy: config/www/kouluruoka_e_historia.json
+# ============================================================
+
+rest:
+  - resource: "https://kouluruoka.fi/page-data/menu/helsinki_haaganylakouluvanhaviertotie/page-data.json"
+    scan_interval: 21600
+    timeout: 30
+    sensor:
+      - name: "Kouluruoka Raaka"
+        unique_id: kouluruoka_raaka
+        value_template: "{{ value_json.result.pageContext.menu.RestaurantName }}"
+        json_attributes_path: "$.result.pageContext.menu"
+        json_attributes:
+          - Days
+          - Start
+          - RestaurantName
+
+command_line:
+  - sensor:
+      name: "Kouluruoka Tänään E-koodit"
+      unique_id: kouluruoka_tanaan_e_koodit
+      command: "python3 /config/python_scripts/kouluruoka_e.py"
+      scan_interval: 3600
+      command_timeout: 60
+      value_template: "{{ value_json.count | default(0) }}"
+      unit_of_measurement: "kpl"
+      json_attributes:
+        - codes
+        - details
+        - count_lounas
+        - codes_lounas
+        - details_lounas
+        - count_kasvis
+        - codes_kasvis
+        - details_kasvis
+        - lounas
+        - kasvis
+        - ainesosat_lounas
+        - ainesosat_kasvis
+        - ravinto_lounas
+        - ravinto_kasvis
+        - ravinto_huomenna_lounas
+        - ravinto_huomenna_kasvis
+        - e_historia_paivia
+        - e_historia_koodeja
+        - e_top
+        - e_top_teksti
+        - e_top1
+        - e_top1_paivia
+        - huomio_lounas
+        - huomio_kasvis
+        - error
+
+template:
+  - sensor:
+      - name: "Kouluruoka Tänään"
+        unique_id: kouluruoka_tanaan
+        state: >-
+          {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+          {% set today = now().day ~ '.' ~ now().month ~ '.' %}
+          {% set found = namespace(name='Ei tietoa') %}
+          {% for day in days if today in day.Date %}
+            {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+              {% set found.name = meal.Name.split(',')[0] | trim %}
+            {% endfor %}
+          {% endfor %}
+          {{ found.name }}
+        attributes:
+          full: >-
+            {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+            {% set today = now().day ~ '.' ~ now().month ~ '.' %}
+            {% for day in days if today in day.Date %}
+              {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+                {{ meal.Name }}
+              {% endfor %}
+            {% endfor %}
+          ainesosat: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_lounas') }}"
+
+      - name: "Kouluruoka Huomenna"
+        unique_id: kouluruoka_huomenna
+        state: >-
+          {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+          {% set tomorrow = (now() + timedelta(days=1)).day ~ '.' ~ (now() + timedelta(days=1)).month ~ '.' %}
+          {% set found = namespace(name='Ei tietoa') %}
+          {% for day in days if tomorrow in day.Date %}
+            {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+              {% set found.name = meal.Name.split(',')[0] | trim %}
+            {% endfor %}
+          {% endfor %}
+          {{ found.name }}
+        attributes:
+          full: >-
+            {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+            {% set tomorrow = (now() + timedelta(days=1)).day ~ '.' ~ (now() + timedelta(days=1)).month ~ '.' %}
+            {% for day in days if tomorrow in day.Date %}
+              {% for meal in day.Meals if meal.MealType == 'Lounas' %}
+                {{ meal.Name }}
+              {% endfor %}
+            {% endfor %}
+
+      - name: "Kouluruoka Tänään Kasvis"
+        unique_id: kouluruoka_tanaan_kasvis
+        state: >-
+          {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+          {% set today = now().day ~ '.' ~ now().month ~ '.' %}
+          {% set found = namespace(name='Ei tietoa') %}
+          {% for day in days if today in day.Date %}
+            {% for meal in day.Meals if meal.MealType == 'Kasvislounas' %}
+              {% set found.name = meal.Name.split(',')[0] | trim %}
+            {% endfor %}
+          {% endfor %}
+          {{ found.name }}
+        attributes:
+          full: >-
+            {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+            {% set today = now().day ~ '.' ~ now().month ~ '.' %}
+            {% for day in days if today in day.Date %}
+              {% for meal in day.Meals if meal.MealType == 'Kasvislounas' %}
+                {{ meal.Name }}
+              {% endfor %}
+            {% endfor %}
+          ainesosat: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_kasvis') }}"
+
+      - name: "Kouluruoka Huomenna Kasvis"
+        unique_id: kouluruoka_huomenna_kasvis
+        state: >-
+          {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+          {% set tomorrow = (now() + timedelta(days=1)).day ~ '.' ~ (now() + timedelta(days=1)).month ~ '.' %}
+          {% set found = namespace(name='Ei tietoa') %}
+          {% for day in days if tomorrow in day.Date %}
+            {% for meal in day.Meals if meal.MealType == 'Kasvislounas' %}
+              {% set found.name = meal.Name.split(',')[0] | trim %}
+            {% endfor %}
+          {% endfor %}
+          {{ found.name }}
+        attributes:
+          full: >-
+            {% set days = state_attr('sensor.kouluruoka_raaka', 'Days') or [] %}
+            {% set tomorrow = (now() + timedelta(days=1)).day ~ '.' ~ (now() + timedelta(days=1)).month ~ '.' %}
+            {% for day in days if tomorrow in day.Date %}
+              {% for meal in day.Meals if meal.MealType == 'Kasvislounas' %}
+                {{ meal.Name }}
+              {% endfor %}
+            {% endfor %}
+
+      - name: "Kouluruoka Tänään E-koodit Lounas"
+        unique_id: kouluruoka_tanaan_e_koodit_lounas
+        unit_of_measurement: "kpl"
+        state: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'count_lounas') | default(0) }}"
+        attributes:
+          codes: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'codes_lounas') }}"
+          details: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'details_lounas') }}"
+          ainesosat: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_lounas') }}"
+          ruoka: "{{ states('sensor.kouluruoka_tanaan') }}"
+
+      - name: "Kouluruoka Tänään E-koodit Kasvis"
+        unique_id: kouluruoka_tanaan_e_koodit_kasvis
+        unit_of_measurement: "kpl"
+        state: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'count_kasvis') | default(0) }}"
+        attributes:
+          codes: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'codes_kasvis') }}"
+          details: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'details_kasvis') }}"
+          ainesosat: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ainesosat_kasvis') }}"
+          ruoka: "{{ states('sensor.kouluruoka_tanaan_kasvis') }}"
+
+      - name: "Kouluruoka Tänään Ravinto Lounas"
+        unique_id: kouluruoka_tanaan_ravinto_lounas
+        unit_of_measurement: "kcal"
+        state: >-
+          {{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('kcal', 0) }}
+        attributes:
+          ruoka: "{{ states('sensor.kouluruoka_tanaan') }}"
+          yhteenveto: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('yhteenveto') }}"
+          kj: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('kj') }}"
+          rasva: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('rasva') }}"
+          tyydyttynyt: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('tyydyttynyt') }}"
+          hiilihydraatit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('hiilihydraatit') }}"
+          sokerit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('sokerit') }}"
+          proteiini: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('proteiini') }}"
+          suola: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('suola') }}"
+          osuus_g: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('osuus_g') }}"
+          komponentit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('komponentit') }}"
+          huomio: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_lounas') or {}).get('huomio') }}"
+
+      - name: "Kouluruoka Tänään Ravinto Kasvis"
+        unique_id: kouluruoka_tanaan_ravinto_kasvis
+        unit_of_measurement: "kcal"
+        state: >-
+          {{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('kcal', 0) }}
+        attributes:
+          ruoka: "{{ states('sensor.kouluruoka_tanaan_kasvis') }}"
+          yhteenveto: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('yhteenveto') }}"
+          kj: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('kj') }}"
+          rasva: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('rasva') }}"
+          tyydyttynyt: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('tyydyttynyt') }}"
+          hiilihydraatit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('hiilihydraatit') }}"
+          sokerit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('sokerit') }}"
+          proteiini: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('proteiini') }}"
+          suola: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('suola') }}"
+          osuus_g: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('osuus_g') }}"
+          komponentit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('komponentit') }}"
+          huomio: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'ravinto_kasvis') or {}).get('huomio') }}"
+
+      - name: "Kouluruoka E-koodit Historia"
+        unique_id: kouluruoka_e_koodit_historia
+        unit_of_measurement: "kpl"
+        state: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_historia_koodeja') | default(0) }}"
+        attributes:
+          paivia: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_historia_paivia') }}"
+          top: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top') }}"
+          top_teksti: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top_teksti') }}"
+          top1: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top1') }}"
+          top1_paivia: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top1_paivia') }}"
+
+      - name: "Kouluruoka E-koodit Yleisin"
+        unique_id: kouluruoka_e_koodit_yleisin
+        state: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top1') or 'ei vielä' }}"
+        attributes:
+          paivia: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top1_paivia') }}"
+          top: "{{ state_attr('sensor.kouluruoka_tanaan_e_koodit', 'e_top') }}"
+
+      - name: "Kouluruoka Huomio Lounas"
+        unique_id: kouluruoka_huomio_lounas
+        state: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('taso', 'ok') }}"
+        attributes:
+          ruoka: "{{ states('sensor.kouluruoka_tanaan') }}"
+          yhteenveto: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('yhteenveto') }}"
+          varoitus_kpl: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('varoitus_kpl') }}"
+          huomio_kpl: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('huomio_kpl') }}"
+          epailyttava_kpl: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('epailyttava_kpl') }}"
+          tyypit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('tyypit') }}"
+          liput: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_lounas') or {}).get('liput') }}"
+
+      - name: "Kouluruoka Huomio Kasvis"
+        unique_id: kouluruoka_huomio_kasvis
+        state: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('taso', 'ok') }}"
+        attributes:
+          ruoka: "{{ states('sensor.kouluruoka_tanaan_kasvis') }}"
+          yhteenveto: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('yhteenveto') }}"
+          varoitus_kpl: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('varoitus_kpl') }}"
+          huomio_kpl: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('huomio_kpl') }}"
+          epailyttava_kpl: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('epailyttava_kpl') }}"
+          tyypit: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('tyypit') }}"
+          liput: "{{ (state_attr('sensor.kouluruoka_tanaan_e_koodit', 'huomio_kasvis') or {}).get('liput') }}"
+

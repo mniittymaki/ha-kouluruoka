@@ -1,0 +1,22 @@
+{
+  "config": {
+    "step": {
+      "user": {
+        "title": "Kouluruoka",
+        "description": "Enter the kouluruoka.fi school slug. Default is Haagan yläkoulu.",
+        "data": {
+          "slug": "School slug or menu URL",
+          "name": "Name in Home Assistant (optional)",
+          "scan_interval": "Update interval (s)"
+        }
+      }
+    },
+    "error": {
+      "invalid_slug": "School not found for this slug",
+      "cannot_connect": "Could not reach kouluruoka.fi"
+    },
+    "abort": {
+      "already_configured": "This school is already configured"
+    }
+  }
+}
