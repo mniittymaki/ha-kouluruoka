@@ -48,7 +48,7 @@ Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa koulu
 `https://kouluruoka.fi/menu/helsinki_haaganylakouluvanhaviertotie/`
 → `helsinki_haaganylakouluvanhaviertotie`
 
-Testaa: `https://kouluruoka.fi/page-data/menu/SLUG/page-data.json` ei saa olla 404.
+Testaa: `https://kouluruoka.fi/menu/SLUG/` avautuu. Syksystä 2026 `page-data.json` on 404; integraatio lukee datan sivun `#gatsby-inlined-page-data`-lohkosta.
 
 Useita kouluja: lisää integraatio uudestaan toisella slugilla.
 

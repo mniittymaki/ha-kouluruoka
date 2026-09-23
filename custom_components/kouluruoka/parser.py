@@ -5,9 +5,30 @@ import json
 import re
 from datetime import date, timedelta
 from pathlib import Path
+
+INLINED_PAGE_DATA_RE = re.compile(
+    r'<script[^>]*id=["\']gatsby-inlined-page-data["\'][^>]*>(.*?)</script>',
+    re.IGNORECASE | re.DOTALL,
+)
+
 HISTORY_KEEP_DAYS = 365
 TOP_LIMIT = 15
 CODE_RE = re.compile(r"\bE[0-9]{3,4}[a-zA-Z]?\b", re.IGNORECASE)
+
+
+def extract_inlined_page_data(html: str) -> dict:
+    """Parse Gatsby page-data that kouluruoka.fi now embeds in the menu HTML."""
+    match = INLINED_PAGE_DATA_RE.search(html or "")
+    if not match:
+        raise ValueError("gatsby-inlined-page-data puuttuu")
+    raw = match.group(1)
+    idx = raw.find("var d=")
+    if idx < 0:
+        raise ValueError("pageData-objekti puuttuu")
+    data, _ = json.JSONDecoder().raw_decode(raw, idx + 6)
+    if not isinstance(data, dict) or "result" not in data:
+        raise ValueError("pageData-rakenne ei täsmää")
+    return data
 NUM_RE = re.compile(
     r"(?P<label>[^:]+):\s*(?P<value>[-+]?\d+(?:[.,]\d+)?)\s*(?P<unit>kcal|kJ|g)?",
     re.IGNORECASE,

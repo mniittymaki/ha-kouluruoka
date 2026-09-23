@@ -16,9 +16,9 @@ from .const import (
     DEFAULT_SCAN_INTERVAL,
     DEFAULT_SLUG,
     DOMAIN,
-    MENU_BASE,
     USER_AGENT,
 )
+from .coordinator import async_fetch_menu
 from .parser import menu_meta
 
 
@@ -31,19 +31,14 @@ def _normalize_slug(value: str) -> str:
 
 
 async def _validate(slug: str) -> str:
-    url = f"{MENU_BASE}/{slug}/page-data.json"
     timeout = aiohttp.ClientTimeout(total=20)
     async with aiohttp.ClientSession(headers={"User-Agent": USER_AGENT}) as session:
         try:
-            async with session.get(url, timeout=timeout) as resp:
-                if resp.status == 404:
-                    raise InvalidSlug
-                if resp.status >= 400:
-                    raise CannotConnect
-                data = await resp.json()
-        except InvalidSlug:
-            raise
+            data = await async_fetch_menu(session, slug)
         except Exception as err:
+            text = str(err).lower()
+            if "ei löytynyt" in text or "404" in text:
+                raise InvalidSlug from err
             raise CannotConnect from err
     meta = menu_meta(data)
     if not meta.get("days"):
