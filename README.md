@@ -4,6 +4,11 @@ Hakee koulun ruokalistan [kouluruoka.fi](https://kouluruoka.fi/)-palvelusta Home
 
 Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa kouluruoka.fi-koulu käy. Ei kytköstä kouluruoka.fi:hin.
 
+## Versio
+
+**1.2.2** — Lounaan ja kasvislounaan tunnistus ei enää vaadi tarkkaa `Lounas` / `Kasvislounas` -merkkijonoa. Tunnistetaan myös `Lounas A/B`, `Lounas 1/2`, `Lounas I/II`, `Lounasvaihtoehto`, `Lounas toinen aste`, ruotsinkielinen `Lunch` / `Vegetarisk lunch`, sekä `Kasvis`, `Kasvisvaihtoehto` ja pisteellä päättyvä `Kasvislounas.`. Tarkka `Lounas` voittaa variantin, jos molemmat ovat olemassa. Sivuvaihtoehdot (`Lounassalaatti`, `Lounaspatonki`, `Keittolounas`) ohitetaan.
+
+
 ## Ominaisuudet
 
 - Lounas + kasvislounas (tänään / huomenna)

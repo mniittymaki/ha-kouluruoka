@@ -29,6 +29,60 @@ def extract_inlined_page_data(html: str) -> dict:
     if not isinstance(data, dict) or "result" not in data:
         raise ValueError("pageData-rakenne ei täsmää")
     return data
+
+_LOUNAS_SKIP = re.compile(
+    r"^(lounassalaatti|lounaspatonki|keittolounas)\b",
+    re.IGNORECASE,
+)
+
+
+def _meal_role(mtype: str) -> tuple[str, int] | None:
+    """Classify MealType as lunch or veg. Lower priority wins.
+
+    Exact 'Lounas' / 'Kasvislounas' beat letter/number variants. Side options
+    such as Lounassalaatti, Lounaspatonki and Keittolounas are ignored.
+    """
+    raw = (mtype or "").strip()
+    if not raw:
+        return None
+    low = raw.lower().rstrip(".")
+    if _LOUNAS_SKIP.match(low):
+        return None
+
+    if low == "kasvislounas" or low.startswith("kasvislounas "):
+        return ("kasvis", 0 if low == "kasvislounas" else 1)
+    if low in ("kasvis", "kasvisvaihtoehto", "vegetarisk lunch"):
+        return ("kasvis", 2)
+    if low in ("vegaaninen lounas", "vegaani lounas"):
+        return ("kasvis", 3)
+
+    if low == "lounas":
+        return ("lounas", 0)
+    if low == "lunch":
+        return ("lounas", 1)
+    if low.startswith("lounas ") or low.startswith("lounasvaihtoehto"):
+        return ("lounas", 1)
+    return None
+
+
+def pick_side_meals(meals: list) -> tuple[dict | None, dict | None]:
+    """Pick the best lunch and veg meal from a day's Meals list."""
+    best_l = None
+    best_l_pri = 99
+    best_k = None
+    best_k_pri = 99
+    for meal in meals or []:
+        role = _meal_role(meal.get("MealType") or "")
+        if not role:
+            continue
+        kind, pri = role
+        if kind == "lounas" and pri < best_l_pri:
+            best_l, best_l_pri = meal, pri
+        elif kind == "kasvis" and pri < best_k_pri:
+            best_k, best_k_pri = meal, pri
+    return best_l, best_k
+
+
 NUM_RE = re.compile(
     r"(?P<label>[^:]+):\s*(?P<value>[-+]?\d+(?:[.,]\d+)?)\s*(?P<unit>kcal|kJ|g)?",
     re.IGNORECASE,
@@ -544,14 +598,9 @@ def merge_history(menu: dict, catalog: dict, today: date, hist: dict | None = No
         parsed = parse_menu_date(raw_day.get("Date") or "", today)
         if not parsed:
             continue
-        lounas = None
-        kasvis = None
-        for meal in raw_day.get("Meals") or []:
-            mtype = meal.get("MealType")
-            if mtype == "Lounas" and lounas is None:
-                lounas = meal_block(meal)
-            elif mtype == "Kasvislounas" and kasvis is None:
-                kasvis = meal_block(meal)
+        raw_l, raw_k = pick_side_meals(raw_day.get("Meals") or [])
+        lounas = meal_block(raw_l) if raw_l else None
+        kasvis = meal_block(raw_k) if raw_k else None
         days[parsed.isoformat()] = {
             "date_label": raw_day.get("Date") or parsed.isoformat(),
             "lounas": compact_day_side(lounas),
@@ -610,12 +659,9 @@ def meals_for_date(menu: dict, target: date) -> dict:
     for day in days:
         if stamp not in (day.get("Date") or ""):
             continue
-        for meal in day.get("Meals") or []:
-            mtype = meal.get("MealType")
-            if mtype == "Lounas" and lounas is None:
-                lounas = meal_block(meal)
-            elif mtype == "Kasvislounas" and kasvis is None:
-                kasvis = meal_block(meal)
+        raw_l, raw_k = pick_side_meals(day.get("Meals") or [])
+        lounas = meal_block(raw_l) if raw_l else None
+        kasvis = meal_block(raw_k) if raw_k else None
     return {"lounas": lounas, "kasvis": kasvis}
 
 
@@ -675,14 +721,9 @@ def calendar_days(menu: dict, today: date) -> list[dict]:
         parsed = parse_menu_date(raw_day.get("Date") or "", today)
         if not parsed:
             continue
-        lounas = None
-        kasvis = None
-        for meal in raw_day.get("Meals") or []:
-            mtype = meal.get("MealType")
-            if mtype == "Lounas" and lounas is None:
-                lounas = meal_block(meal)
-            elif mtype == "Kasvislounas" and kasvis is None:
-                kasvis = meal_block(meal)
+        raw_l, raw_k = pick_side_meals(raw_day.get("Meals") or [])
+        lounas = meal_block(raw_l) if raw_l else None
+        kasvis = meal_block(raw_k) if raw_k else None
         out.append({
             "date": parsed,
             "label": raw_day.get("Date") or parsed.isoformat(),
