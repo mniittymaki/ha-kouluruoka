@@ -347,6 +347,22 @@ def yhteenveto(tot: dict) -> str:
     )
 
 
+def first_dish(name: str) -> str:
+    """First dish of a meal Name: text before the first comma outside parentheses.
+
+    Some menus put diet markers inside the name, e.g. 'Kalakeitto (L, G), Ruisleipä'.
+    """
+    depth = 0
+    for i, ch in enumerate(name or ""):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        elif ch == "," and depth == 0:
+            return name[:i].strip()
+    return (name or "").strip()
+
+
 def meal_nutrition(meal: dict | None) -> dict | None:
     if not meal:
         return None
@@ -354,7 +370,7 @@ def meal_nutrition(meal: dict | None) -> dict | None:
     total = sum_annos(components)
     name = (meal.get("Name") or "").strip()
     short = (components[0].get("name") if components else "") or (
-        name.split(",")[0].strip() if name else ""
+        first_dish(name) if name else ""
     )
     return {
         "name": short,
@@ -382,7 +398,7 @@ def meal_nutrition(meal: dict | None) -> dict | None:
 
 def meal_block(meal: dict) -> dict:
     name = (meal.get("Name") or "").strip()
-    short = name.split(",")[0].strip() if name else ""
+    short = first_dish(name) if name else ""
     ingredients = []
     labels = []
     for n in meal.get("Nutritions") or []:
