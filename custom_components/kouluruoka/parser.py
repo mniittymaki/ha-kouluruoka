@@ -65,8 +65,22 @@ def _meal_role(mtype: str) -> tuple[str, int] | None:
     return None
 
 
+_DIET_RE = re.compile(r"\(([^)]*)\)")
+
+
+def _is_vegetarian(meal: dict) -> bool:
+    """Main dish (first diet marker group in Name) is marked K = kasvis."""
+    match = _DIET_RE.search(meal.get("Name") or "")
+    return bool(match) and "K" in {t.strip() for t in match.group(1).split(",")}
+
+
 def pick_side_meals(meals: list) -> tuple[dict | None, dict | None]:
-    """Pick the best lunch and veg meal from a day's Meals list."""
+    """Pick the best lunch and veg meal from a day's Meals list.
+
+    Some menus (e.g. Rovaniemi) have no Kasvislounas type: the vegetarian option is
+    another lunch variant such as 'Lounas 1'. It is used as veg when its main dish
+    is marked K.
+    """
     best_l = None
     best_l_pri = 99
     best_k = None
@@ -80,6 +94,12 @@ def pick_side_meals(meals: list) -> tuple[dict | None, dict | None]:
             best_l, best_l_pri = meal, pri
         elif kind == "kasvis" and pri < best_k_pri:
             best_k, best_k_pri = meal, pri
+    if best_k is None:
+        for meal in meals or []:
+            role = _meal_role(meal.get("MealType") or "")
+            if meal is not best_l and role and role[0] == "lounas" and _is_vegetarian(meal):
+                best_k = meal
+                break
     return best_l, best_k
 
 
@@ -327,6 +347,22 @@ def yhteenveto(tot: dict) -> str:
     )
 
 
+def first_dish(name: str) -> str:
+    """First dish of a meal Name: text before the first comma outside parentheses.
+
+    Some menus put diet markers inside the name, e.g. 'Kalakeitto (L, G), Ruisleipä'.
+    """
+    depth = 0
+    for i, ch in enumerate(name or ""):
+        if ch == "(":
+            depth += 1
+        elif ch == ")":
+            depth = max(0, depth - 1)
+        elif ch == "," and depth == 0:
+            return name[:i].strip()
+    return (name or "").strip()
+
+
 def meal_nutrition(meal: dict | None) -> dict | None:
     if not meal:
         return None
@@ -334,7 +370,7 @@ def meal_nutrition(meal: dict | None) -> dict | None:
     total = sum_annos(components)
     name = (meal.get("Name") or "").strip()
     short = (components[0].get("name") if components else "") or (
-        name.split(",")[0].strip() if name else ""
+        first_dish(name) if name else ""
     )
     return {
         "name": short,
@@ -362,7 +398,7 @@ def meal_nutrition(meal: dict | None) -> dict | None:
 
 def meal_block(meal: dict) -> dict:
     name = (meal.get("Name") or "").strip()
-    short = name.split(",")[0].strip() if name else ""
+    short = first_dish(name) if name else ""
     ingredients = []
     labels = []
     for n in meal.get("Nutritions") or []:
