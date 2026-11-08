@@ -30,6 +30,36 @@ def extract_inlined_page_data(html: str) -> dict:
         raise ValueError("pageData-rakenne ei täsmää")
     return data
 
+
+def merge_menu_days(menu: dict, extra: dict | None) -> dict:
+    """Append days from another week's page-data that the main menu lacks.
+
+    kouluruoka.fi shows only the current week on the main page; next week is
+    on page /2/. Days already in ``menu`` win, so the current week is unchanged.
+    """
+    extra_days = (
+        (extra or {}).get("result", {})
+        .get("pageContext", {})
+        .get("menu", {})
+        .get("Days")
+        or []
+    )
+    if not extra_days:
+        return menu
+    raw = menu.get("result", {}).get("pageContext", {}).get("menu")
+    if not isinstance(raw, dict):
+        return menu
+    days = list(raw.get("Days") or [])
+    seen = {(d.get("Date") or "").strip() for d in days}
+    for day in extra_days:
+        label = (day.get("Date") or "").strip()
+        if label and label not in seen:
+            days.append(day)
+            seen.add(label)
+    raw["Days"] = days
+    return menu
+
+
 _LOUNAS_SKIP = re.compile(
     r"^(lounassalaatti|lounaspatonki|keittolounas)\b",
     re.IGNORECASE,
@@ -653,11 +683,11 @@ def meals_for_date(menu: dict, target: date) -> dict:
         .get("Days")
         or []
     )
-    stamp = f"{target.day}.{target.month}."
     lounas = None
     kasvis = None
     for day in days:
-        if stamp not in (day.get("Date") or ""):
+        # Compare parsed dates: a substring match would let 1.12. hit 11.12.
+        if parse_menu_date(day.get("Date") or "", target) != target:
             continue
         raw_l, raw_k = pick_side_meals(day.get("Meals") or [])
         lounas = meal_block(raw_l) if raw_l else None
