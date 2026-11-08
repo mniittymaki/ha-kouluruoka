@@ -18,26 +18,40 @@ from .const import (
     DOMAIN,
     MENU_JSON_BASE,
     MENU_PAGE_BASE,
+    NEXT_WEEK_PAGE,
     STORAGE_VERSION,
     USER_AGENT,
 )
-from .parser import build_snapshot, extract_inlined_page_data, load_catalog
+from .parser import (
+    build_snapshot,
+    extract_inlined_page_data,
+    load_catalog,
+    merge_menu_days,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_fetch_menu(session: aiohttp.ClientSession, slug: str) -> dict:
-    """Load menu JSON, falling back to inlined HTML after the 2026 site change."""
+async def async_fetch_menu(
+    session: aiohttp.ClientSession, slug: str, page: str = ""
+) -> dict | None:
+    """Load menu JSON, falling back to inlined HTML after the 2026 site change.
+
+    ``page`` is the week page path ("" = this week, "2/" = next week). Next
+    week's page is optional: it returns None when the page does not exist.
+    """
     timeout = aiohttp.ClientTimeout(total=30)
-    json_url = f"{MENU_JSON_BASE}/{slug}/page-data.json"
+    json_url = f"{MENU_JSON_BASE}/{slug}/{page}page-data.json"
     async with session.get(json_url, timeout=timeout) as resp:
         if resp.status == 200:
             data = await resp.json()
             if isinstance(data, dict) and data.get("result"):
                 return data
-    page_url = f"{MENU_PAGE_BASE}/{slug}/"
+    page_url = f"{MENU_PAGE_BASE}/{slug}/{page}"
     async with session.get(page_url, timeout=timeout) as resp:
         if resp.status == 404:
+            if page:
+                return None
             raise UpdateFailed(f"Koulua ei löytynyt: {slug}")
         if resp.status != 200:
             raise UpdateFailed(f"kouluruoka.fi HTTP {resp.status}")
@@ -46,6 +60,15 @@ async def async_fetch_menu(session: aiohttp.ClientSession, slug: str) -> dict:
         return extract_inlined_page_data(html)
     except ValueError as err:
         raise UpdateFailed(str(err)) from err
+
+
+async def async_fetch_next_week(session: aiohttp.ClientSession, slug: str) -> dict | None:
+    """Next week's menu, or None. A failure here never fails the update."""
+    try:
+        return await async_fetch_menu(session, slug, NEXT_WEEK_PAGE)
+    except Exception as err:  # noqa: BLE001
+        _LOGGER.debug("Ensi viikon ruokalistaa ei saatu (%s): %s", slug, err)
+        return None
 
 
 class KouluruokaCoordinator(DataUpdateCoordinator[dict]):
@@ -85,6 +108,7 @@ class KouluruokaCoordinator(DataUpdateCoordinator[dict]):
             raise
         except Exception as err:
             raise UpdateFailed(str(err)) from err
+        menu = merge_menu_days(menu, await async_fetch_next_week(self._session, self.slug))
 
         snapshot, history = await self.hass.async_add_executor_job(
             build_snapshot, menu, self._catalog, date.today(), self._history

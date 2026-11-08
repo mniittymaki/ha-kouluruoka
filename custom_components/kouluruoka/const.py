@@ -4,6 +4,7 @@ DEFAULT_SLUG = "helsinki_haaganylakouluvanhaviertotie"
 DEFAULT_SCAN_INTERVAL = 21600
 MENU_JSON_BASE = "https://kouluruoka.fi/page-data/menu"
 MENU_PAGE_BASE = "https://kouluruoka.fi/menu"
+NEXT_WEEK_PAGE = "2/"
 MENU_BASE = MENU_JSON_BASE
 USER_AGENT = "HomeAssistant-Kouluruoka/1.2.2"
 
