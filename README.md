@@ -6,7 +6,7 @@ Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa koulu
 
 ## Versio
 
-**1.2.2** — Lounaan ja kasvislounaan tunnistus ei enää vaadi tarkkaa `Lounas` / `Kasvislounas` -merkkijonoa. Tunnistetaan myös `Lounas A/B`, `Lounas 1/2`, `Lounas I/II`, `Lounasvaihtoehto`, `Lounas toinen aste`, ruotsinkielinen `Lunch` / `Vegetarisk lunch`, sekä `Kasvis`, `Kasvisvaihtoehto` ja pisteellä päättyvä `Kasvislounas.`. Tarkka `Lounas` voittaa variantin, jos molemmat ovat olemassa. Sivuvaihtoehdot (`Lounassalaatti`, `Lounaspatonki`, `Keittolounas`) ohitetaan.
+**1.2.3** — Lisätty tuki MealType-nimille `Koululounas 1`/`2` (Espoo), `Lounas kasvisruoka` (Ii), `*Lounas` (Lappeenranta, tähti stripataan), `Kotiruokalounas` (Kuopio). 1.2.2:n tunnistus säilyy: A/B, 1/2, I/II, Kasvis-variantit, ruotsinkieliset. Tarkka `Lounas` voittaa variantin. Sivuvaihtoehdot ohitetaan.
 
 
 ## Ominaisuudet
