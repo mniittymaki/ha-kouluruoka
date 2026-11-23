@@ -6,7 +6,7 @@ Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa koulu
 
 ## Versio
 
-**1.2.3** — Lisätty tuki MealType-nimille `Koululounas 1`/`2` (Espoo), `Lounas kasvisruoka` (Ii), `*Lounas` (Lappeenranta, tähti stripataan), `Kotiruokalounas` (Kuopio). 1.2.2:n tunnistus säilyy: A/B, 1/2, I/II, Kasvis-variantit, ruotsinkieliset. Tarkka `Lounas` voittaa variantin. Sivuvaihtoehdot ohitetaan.
+**1.2.4** — E-koodit haetaan taas `Nutritions[].Label`-kentistä (Ingredients-taulukko poistui datasta ~14.11.). Regex tunnistaa myös `E 450`-muodon. 1.2.3:n MealType-tuki säilyy.
 
 
 ## Ominaisuudet
