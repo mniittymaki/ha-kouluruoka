@@ -6,7 +6,7 @@ Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa koulu
 
 ## Versio
 
-**1.2.5** — Ravintoarvot luetaan taas `Nutritions[].Items[].Text`-kentistä (komponenttikohtaiset arvot summataan). 1.2.4:n E-koodikorjaus säilyy.
+**1.2.5** — Ravintoarvot luetaan `Nutritions[].Items[].Text`-kentistä (komponenttikohtaiset arvot summataan). Kalenteri täyttyy taas (ISO-date + calendar-lista snapshotissa). 1.2.4:n E-koodikorjaus säilyy.
 
 
 ## Ominaisuudet
