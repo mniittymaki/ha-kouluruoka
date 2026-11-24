@@ -1,11 +1,12 @@
 DOMAIN = "kouluruoka"
-VERSION = "1.2.3"
+VERSION = "1.2.6"
 DEFAULT_SLUG = "helsinki_haaganylakouluvanhaviertotie"
 DEFAULT_SCAN_INTERVAL = 21600
 MENU_JSON_BASE = "https://kouluruoka.fi/page-data/menu"
 MENU_PAGE_BASE = "https://kouluruoka.fi/menu"
+NEXT_WEEK_PAGE = "2/"
 MENU_BASE = MENU_JSON_BASE
-USER_AGENT = "HomeAssistant-Kouluruoka/1.2.3"
+USER_AGENT = "HomeAssistant-Kouluruoka/1.2.6"
 
 CONF_SLUG = "slug"
 CONF_NAME = "name"
