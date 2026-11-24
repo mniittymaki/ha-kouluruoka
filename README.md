@@ -6,7 +6,7 @@ Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa koulu
 
 ## Versio
 
-**1.2.4** — E-koodit haetaan taas `Nutritions[].Label`-kentistä (Ingredients-taulukko poistui datasta ~14.11.). Regex tunnistaa myös `E 450`-muodon. 1.2.3:n MealType-tuki säilyy.
+**1.2.5** — Ravintoarvot luetaan taas `Nutritions[].Items[].Text`-kentistä (komponenttikohtaiset arvot summataan). 1.2.4:n E-koodikorjaus säilyy.
 
 
 ## Ominaisuudet
@@ -84,7 +84,7 @@ Sääntöpohjainen tarkistus, ei lääketieteellinen arvio.
 - **huomio**: siirapit, proteiinivalmiste, makeutusaineet, korkea sokeri
 - **epailyttava**: aromit, emulgaattorit, muunnettu tärkkelys, E466/E471 yms.
 
-Ravintoarvot kouluruoka.fi:ssä ovat **per 100 g**. Integraatio skaalaa ne VRN-koululaisannoksilla.
+Ravintoarvot kouluruoka.fi:ssä ovat **per 100 g**. Integraatio summaa komponenttikohtaiset arvot.
 
 ## Vanha YAML-paketti
 
