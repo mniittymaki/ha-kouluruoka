@@ -6,7 +6,7 @@ Oletuskoulu on **Haagan yläkoulu (Vanha Viertotie)**, mutta mikä tahansa koulu
 
 ## Versio
 
-**1.2.5** — Ravintoarvot luetaan `Nutritions[].Items[].Text`-kentistä (komponenttikohtaiset arvot summataan). Kalenteri täyttyy taas (ISO-date + calendar-lista snapshotissa). 1.2.4:n E-koodikorjaus säilyy.
+**1.2.6** — Ensi viikon ruokalista haetaan `/menu/<slug>/2/`-sivulta (korjaa viikonlopun "huominen = Ei tietoa"). Rovaniemi-tyyliset listat: kasvisvaihtoehto tunnistetaan K-merkinnästä, jos erillistä Kasvis-tyyppiä ei ole. 1.2.5:n ravinto- ja kalenterikorjaukset säilyvät.
 
 
 ## Ominaisuudet
